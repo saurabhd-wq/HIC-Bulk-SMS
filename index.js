@@ -3,9 +3,10 @@ require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
 
-const app = express();
+const env = require("./config/env");
+const tokenStore = require("./storage/tokenStore");
 
-const PORT = process.env.PORT || 3000;
+const app = express();
 
 app.get("/", (req, res) => {
   res.send("HubSpot OAuth Service is running.");
@@ -23,9 +24,9 @@ app.get("/oauth-callback", async (req, res) => {
       "https://api.hubapi.com/oauth/v1/token",
       new URLSearchParams({
         grant_type: "authorization_code",
-        client_id: process.env.HUBSPOT_CLIENT_ID,
-        client_secret: process.env.HUBSPOT_CLIENT_SECRET,
-        redirect_uri: process.env.HUBSPOT_REDIRECT_URI,
+        client_id: env.HUBSPOT_CLIENT_ID,
+        client_secret: env.HUBSPOT_CLIENT_SECRET,
+        redirect_uri: env.HUBSPOT_REDIRECT_URI,
         code,
       }),
       {
@@ -35,25 +36,25 @@ app.get("/oauth-callback", async (req, res) => {
       }
     );
 
-    console.log("\n===== HUBSPOT TOKENS =====");
-    console.log(response.data);
-    console.log("==========================\n");
+    tokenStore.saveTokens(response.data);
+
+    console.log("\n===== HUBSPOT TOKENS SAVED =====");
+    console.log(tokenStore.getTokens());
+    console.log("===============================\n");
 
     res.send(`
       <h2>HubSpot App Installed Successfully</h2>
-      <p>You can close this window.</p>
+      <p>OAuth tokens have been stored successfully.</p>
     `);
   } catch (error) {
-    console.error(
-      error.response?.data || error.message
-    );
+    console.error(error.response?.data || error.message);
 
     res.status(500).send("OAuth token exchange failed.");
   }
 });
 
-app.listen(PORT, () => {
+app.listen(env.PORT, () => {
   console.log(
-    `OAuth service listening on http://localhost:${PORT}`
+    `OAuth service listening on port ${env.PORT}`
   );
 });
