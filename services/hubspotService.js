@@ -21,7 +21,14 @@ async function getContacts() {
     }
   );
 
-  return response.data;
+  return response.data.results.map((contact) => ({
+    id: contact.id,
+    firstName: contact.properties.firstname || "",
+    lastName: contact.properties.lastname || "",
+    email: contact.properties.email || "",
+    phone: contact.properties.phone || "",
+    mobilePhone: contact.properties.mobilephone || "",
+  }));
 }
 
 module.exports = {
