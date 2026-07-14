@@ -216,7 +216,7 @@ app.post("/campaigns/:id/send", async (req, res) => {
           );
 
         success++;
-
+ 
         results.push({
           contact: contact.email,
           status: "Sent",
