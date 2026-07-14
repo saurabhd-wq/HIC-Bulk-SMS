@@ -81,6 +81,10 @@ app.get("/contacts", async (req, res) => {
 });
 
 app.post("/campaigns", async (req, res) => {
+  console.log("===== /campaigns called =====");
+  console.log("Headers:", req.headers);
+  console.log("Body:", req.body);
+
   try {
     const { contactIds } = req.body;
 
