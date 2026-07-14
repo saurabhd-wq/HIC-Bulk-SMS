@@ -6,6 +6,7 @@ const axios = require("axios");
 const env = require("./config/env");
 const hubspotService = require("./services/hubspotService");
 const installationRepository = require("./repositories/installationRepository");
+const smsCampaignRepository = require("./repositories/smsCampaignRepository");
 
 const app = express();
 
@@ -67,12 +68,40 @@ app.get("/oauth-callback", async (req, res) => {
 app.get("/contacts", async (req, res) => {
   try {
     const search = req.query.search || "";
-
     const contacts = await hubspotService.getContacts(search);
-
     res.json(contacts);
   } catch (error) {
     console.error(error.response?.data || error.message);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+app.post("/campaigns", async (req, res) => {
+  try {
+    const { contactIds } = req.body;
+
+    if (!Array.isArray(contactIds) || contactIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please select at least one contact.",
+      });
+    }
+
+    const campaign = await smsCampaignRepository.createCampaign(
+      246694241,
+      contactIds
+    );
+
+    res.json({
+      success: true,
+      campaign,
+    });
+  } catch (error) {
+    console.error(error);
 
     res.status(500).json({
       success: false,
