@@ -1,18 +1,22 @@
 const axios = require("axios");
-const tokenStore = require("../storage/tokenStore");
+const installationRepository = require("../repositories/installationRepository");
 
 async function getContacts() {
-  const tokens = tokenStore.getTokens();
+  // Replace this with your Developer Test Account Hub ID for now.
+  // We'll make this dynamic in the next phase.
+  const HUB_ID = 246694241;
 
-  if (!tokens || !tokens.access_token) {
-    throw new Error("HubSpot access token not found.");
+  const installation = await installationRepository.getInstallation(HUB_ID);
+
+  if (!installation) {
+    throw new Error("HubSpot installation not found.");
   }
 
   const response = await axios.get(
     "https://api.hubapi.com/crm/v3/objects/contacts",
     {
       headers: {
-        Authorization: `Bearer ${tokens.access_token}`,
+        Authorization: `Bearer ${installation.access_token}`,
       },
       params: {
         limit: 100,
