@@ -5,9 +5,12 @@ const axios = require("axios");
 
 const env = require("./config/env");
 const hubspotService = require("./services/hubspotService");
+
 const installationRepository = require("./repositories/installationRepository");
 const smsCampaignRepository = require("./repositories/smsCampaignRepository");
 const contactRepository = require("./repositories/contactRepository");
+
+const twilioService = require("./services/twilioService");
 
 const app = express();
 
@@ -86,11 +89,10 @@ app.post("/campaigns", async (req, res) => {
   try {
     const { contactIds } = req.body;
 
-    const campaign =
-      await smsCampaignRepository.createCampaign(
-        246694241,
-        contactIds
-      );
+    const campaign = await smsCampaignRepository.createCampaign(
+      246694241,
+      contactIds
+    );
 
     res.json(campaign);
   } catch (error) {
@@ -105,10 +107,9 @@ app.post("/campaigns", async (req, res) => {
 
 app.get("/campaigns/:id", async (req, res) => {
   try {
-    const campaign =
-      await smsCampaignRepository.getCampaign(
-        req.params.id
-      );
+    const campaign = await smsCampaignRepository.getCampaign(
+      req.params.id
+    );
 
     if (!campaign) {
       return res.status(404).json({
@@ -130,10 +131,9 @@ app.get("/campaigns/:id", async (req, res) => {
 
 app.get("/campaigns/:id/contacts", async (req, res) => {
   try {
-    const campaign =
-      await smsCampaignRepository.getCampaign(
-        req.params.id
-      );
+    const campaign = await smsCampaignRepository.getCampaign(
+      req.params.id
+    );
 
     if (!campaign) {
       return res.status(404).json({
@@ -158,15 +158,86 @@ app.get("/campaigns/:id/contacts", async (req, res) => {
   }
 });
 
-app.patch("/campaigns/:id/message", async (req, res) => {
+/* SEND SMS */
+
+app.post("/campaigns/:id/send", async (req, res) => {
   try {
+    const { message } = req.body;
+
+    if (!message || message.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Message is required.",
+      });
+    }
+
     const campaign =
-      await smsCampaignRepository.updateMessage(
-        req.params.id,
-        req.body.message
+      await smsCampaignRepository.getCampaign(
+        req.params.id
       );
 
-    res.json(campaign);
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: "Campaign not found.",
+      });
+    }
+
+    const contacts =
+      await contactRepository.getContactsByIds(
+        campaign.contact_ids
+      );
+
+    let success = 0;
+    let failed = 0;
+
+    const results = [];
+
+    for (const contact of contacts) {
+      const phone =
+        contact.phone || contact.mobilePhone;
+
+      if (!phone) {
+        failed++;
+
+        results.push({
+          contact: contact.email,
+          status: "No Phone",
+        });
+
+        continue;
+      }
+
+      try {
+        const sms =
+          await twilioService.sendSMS(
+            phone,
+            message
+          );
+
+        success++;
+
+        results.push({
+          contact: contact.email,
+          status: "Sent",
+          sid: sms.sid,
+        });
+      } catch (err) {
+        failed++;
+
+        results.push({
+          contact: contact.email,
+          status: err.message,
+        });
+      }
+    }
+
+    res.json({
+      total: contacts.length,
+      success,
+      failed,
+      results,
+    });
   } catch (error) {
     console.error(error);
 
