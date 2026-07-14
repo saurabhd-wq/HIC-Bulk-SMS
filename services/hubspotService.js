@@ -1,7 +1,7 @@
 const axios = require("axios");
 const installationRepository = require("../repositories/installationRepository");
 
-async function getContacts() {
+async function getContacts(search = "") {
   // Replace this with your Developer Test Account Hub ID for now.
   // We'll make this dynamic in the next phase.
   const HUB_ID = 246694241;

@@ -69,7 +69,8 @@ app.get("/oauth-callback", async (req, res) => {
 
 app.get("/contacts", async (req, res) => {
   try {
-    const contacts = await hubspotService.getContacts();
+    const search = req.query.search || "";
+    const contacts = await hubspotService.getContacts(search);
 
     res.json(contacts);
   } catch (error) {
