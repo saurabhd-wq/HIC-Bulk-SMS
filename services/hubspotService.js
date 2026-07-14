@@ -1,21 +1,15 @@
 const axios = require("axios");
 const installationRepository = require("../repositories/installationRepository");
+const oauthService = require("./oauthService");
 
-async function getContacts(search = "") {
-  // TODO: Later we'll make this dynamic from the HubSpot request context
-  const HUB_ID = 246694241;
+const HUB_ID = 246694241;
 
-  const installation = await installationRepository.getInstallation(HUB_ID);
-
-  if (!installation) {
-    throw new Error("HubSpot installation not found.");
-  }
-
+async function fetchContacts(accessToken) {
   const response = await axios.get(
     "https://api.hubapi.com/crm/v3/objects/contacts",
     {
       headers: {
-        Authorization: `Bearer ${installation.access_token}`,
+        Authorization: `Bearer ${accessToken}`,
       },
       params: {
         limit: 100,
@@ -24,7 +18,7 @@ async function getContacts(search = "") {
     }
   );
 
-  const contacts = response.data.results.map((contact) => ({
+  return response.data.results.map((contact) => ({
     id: contact.id,
     firstName: contact.properties.firstname || "",
     lastName: contact.properties.lastname || "",
@@ -32,6 +26,30 @@ async function getContacts(search = "") {
     phone: contact.properties.phone || "",
     mobilePhone: contact.properties.mobilephone || "",
   }));
+}
+
+async function getContacts(search = "") {
+  let installation = await installationRepository.getInstallation(HUB_ID);
+
+  if (!installation) {
+    throw new Error("HubSpot installation not found.");
+  }
+
+  let contacts;
+
+  try {
+    contacts = await fetchContacts(installation.access_token);
+  } catch (error) {
+    if (error.response?.status !== 401) {
+      throw error;
+    }
+
+    console.log("Access token expired. Refreshing...");
+
+    const newAccessToken = await oauthService.refreshAccessToken(HUB_ID);
+
+    contacts = await fetchContacts(newAccessToken);
+  }
 
   if (!search || search.trim() === "") {
     return contacts;
