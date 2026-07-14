@@ -52,9 +52,7 @@ app.get("/oauth-callback", async (req, res) => {
       expiresAt,
     });
 
-    console.log(
-      `Installation saved for Hub ID ${tokenData.hub_id}`
-    );
+    console.log(`Installation saved for Hub ID ${tokenData.hub_id}`);
 
     res.send(`
       <h2>HubSpot App Installed Successfully</h2>
@@ -62,7 +60,6 @@ app.get("/oauth-callback", async (req, res) => {
     `);
   } catch (error) {
     console.error(error.response?.data || error.message);
-
     res.status(500).send("OAuth token exchange failed.");
   }
 });
@@ -70,6 +67,7 @@ app.get("/oauth-callback", async (req, res) => {
 app.get("/contacts", async (req, res) => {
   try {
     const search = req.query.search || "";
+
     const contacts = await hubspotService.getContacts(search);
 
     res.json(contacts);
