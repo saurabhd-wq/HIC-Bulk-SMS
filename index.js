@@ -7,6 +7,7 @@ const env = require("./config/env");
 const hubspotService = require("./services/hubspotService");
 const installationRepository = require("./repositories/installationRepository");
 const smsCampaignRepository = require("./repositories/smsCampaignRepository");
+const contactRepository = require("./repositories/contactRepository");
 
 const app = express();
 
@@ -37,8 +38,7 @@ app.get("/oauth-callback", async (req, res) => {
       }),
       {
         headers: {
-          "Content-Type":
-            "application/x-www-form-urlencoded",
+          "Content-Type": "application/x-www-form-urlencoded",
         },
       }
     );
@@ -118,6 +118,36 @@ app.get("/campaigns/:id", async (req, res) => {
     }
 
     res.json(campaign);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+app.get("/campaigns/:id/contacts", async (req, res) => {
+  try {
+    const campaign =
+      await smsCampaignRepository.getCampaign(
+        req.params.id
+      );
+
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: "Campaign not found.",
+      });
+    }
+
+    const contacts =
+      await contactRepository.getContactsByIds(
+        campaign.contact_ids
+      );
+
+    res.json(contacts);
   } catch (error) {
     console.error(error);
 
