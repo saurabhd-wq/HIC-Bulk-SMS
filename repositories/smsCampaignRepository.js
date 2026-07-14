@@ -3,17 +3,14 @@ const pool = require("../config/database");
 async function createCampaign(hubId, contactIds) {
   const result = await pool.query(
     `
-      INSERT INTO sms_campaigns (
-        hub_id,
-        contact_ids
-      )
-      VALUES ($1, $2)
-      RETURNING *;
+    INSERT INTO sms_campaigns (
+      hub_id,
+      contact_ids
+    )
+    VALUES ($1, $2)
+    RETURNING *;
     `,
-    [
-      hubId,
-      JSON.stringify(contactIds),
-    ]
+    [hubId, JSON.stringify(contactIds)]
   );
 
   return result.rows[0];
@@ -22,9 +19,9 @@ async function createCampaign(hubId, contactIds) {
 async function getCampaign(id) {
   const result = await pool.query(
     `
-      SELECT *
-      FROM sms_campaigns
-      WHERE id = $1
+    SELECT *
+    FROM sms_campaigns
+    WHERE id = $1
     `,
     [id]
   );
@@ -33,16 +30,19 @@ async function getCampaign(id) {
 }
 
 async function updateMessage(id, message) {
-  await pool.query(
+  const result = await pool.query(
     `
-      UPDATE sms_campaigns
-      SET
-        message = $2,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = $1
+    UPDATE sms_campaigns
+    SET
+      message = $2,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = $1
+    RETURNING *;
     `,
     [id, message]
   );
+
+  return result.rows[0];
 }
 
 module.exports = {

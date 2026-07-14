@@ -16,6 +16,8 @@ app.get("/", (req, res) => {
   res.send("HubSpot OAuth Service is running.");
 });
 
+/* OAuth */
+
 app.get("/oauth-callback", async (req, res) => {
   const { code } = req.query;
 
@@ -35,43 +37,41 @@ app.get("/oauth-callback", async (req, res) => {
       }),
       {
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+          "Content-Type":
+            "application/x-www-form-urlencoded",
         },
       }
     );
 
     const tokenData = response.data;
 
-    const expiresAt = new Date(
-      Date.now() + tokenData.expires_in * 1000
-    );
-
     await installationRepository.saveInstallation({
       hubId: tokenData.hub_id,
       accessToken: tokenData.access_token,
       refreshToken: tokenData.refresh_token,
-      expiresAt,
+      expiresAt: new Date(
+        Date.now() + tokenData.expires_in * 1000
+      ),
     });
 
-    console.log(`Installation saved for Hub ID ${tokenData.hub_id}`);
-
-    res.send(`
-      <h2>HubSpot App Installed Successfully</h2>
-      <p>You can close this window.</p>
-    `);
+    res.send("Installation successful.");
   } catch (error) {
     console.error(error.response?.data || error.message);
-    res.status(500).send("OAuth token exchange failed.");
+    res.status(500).send("OAuth failed.");
   }
 });
 
+/* Contacts */
+
 app.get("/contacts", async (req, res) => {
   try {
-    const search = req.query.search || "";
-    const contacts = await hubspotService.getContacts(search);
+    const contacts = await hubspotService.getContacts(
+      req.query.search || ""
+    );
+
     res.json(contacts);
   } catch (error) {
-    console.error(error.response?.data || error.message);
+    console.error(error);
 
     res.status(500).json({
       success: false,
@@ -80,26 +80,63 @@ app.get("/contacts", async (req, res) => {
   }
 });
 
+/* Campaign */
+
 app.post("/campaigns", async (req, res) => {
   try {
     const { contactIds } = req.body;
 
-    if (!Array.isArray(contactIds) || contactIds.length === 0) {
-      return res.status(400).json({
+    const campaign =
+      await smsCampaignRepository.createCampaign(
+        246694241,
+        contactIds
+      );
+
+    res.json(campaign);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+app.get("/campaigns/:id", async (req, res) => {
+  try {
+    const campaign =
+      await smsCampaignRepository.getCampaign(
+        req.params.id
+      );
+
+    if (!campaign) {
+      return res.status(404).json({
         success: false,
-        message: "Please select at least one contact.",
+        message: "Campaign not found.",
       });
     }
 
-    const campaign = await smsCampaignRepository.createCampaign(
-      246694241,
-      contactIds
-    );
+    res.json(campaign);
+  } catch (error) {
+    console.error(error);
 
-    res.json({
-      success: true,
-      campaign,
+    res.status(500).json({
+      success: false,
+      message: error.message,
     });
+  }
+});
+
+app.patch("/campaigns/:id/message", async (req, res) => {
+  try {
+    const campaign =
+      await smsCampaignRepository.updateMessage(
+        req.params.id,
+        req.body.message
+      );
+
+    res.json(campaign);
   } catch (error) {
     console.error(error);
 
@@ -111,5 +148,7 @@ app.post("/campaigns", async (req, res) => {
 });
 
 app.listen(env.PORT, () => {
-  console.log(`OAuth service listening on port ${env.PORT}`);
+  console.log(
+    `OAuth service listening on port ${env.PORT}`
+  );
 });
