@@ -4,8 +4,8 @@ const express = require("express");
 const axios = require("axios");
 
 const env = require("./config/env");
-const tokenStore = require("./storage/tokenStore");
 const hubspotService = require("./services/hubspotService");
+const installationRepository = require("./repositories/installationRepository");
 
 const app = express();
 
@@ -39,9 +39,22 @@ app.get("/oauth-callback", async (req, res) => {
       }
     );
 
-    tokenStore.saveTokens(response.data);
+    const tokenData = response.data;
 
-    console.log("HubSpot OAuth tokens saved.");
+    const expiresAt = new Date(
+      Date.now() + tokenData.expires_in * 1000
+    );
+
+    await installationRepository.saveInstallation({
+      hubId: tokenData.hub_id,
+      accessToken: tokenData.access_token,
+      refreshToken: tokenData.refresh_token,
+      expiresAt,
+    });
+
+    console.log(
+      `Installation saved for Hub ID ${tokenData.hub_id}`
+    );
 
     res.send(`
       <h2>HubSpot App Installed Successfully</h2>
@@ -49,6 +62,7 @@ app.get("/oauth-callback", async (req, res) => {
     `);
   } catch (error) {
     console.error(error.response?.data || error.message);
+
     res.status(500).send("OAuth token exchange failed.");
   }
 });
@@ -56,6 +70,7 @@ app.get("/oauth-callback", async (req, res) => {
 app.get("/contacts", async (req, res) => {
   try {
     const contacts = await hubspotService.getContacts();
+
     res.json(contacts);
   } catch (error) {
     console.error(error.response?.data || error.message);
