@@ -94,10 +94,7 @@ app.get("/contacts", async (req, res) => {
       });
     }
 
-    const contacts = await hubspotService.getContacts(
-      hubId,
-      req.query.search || ""
-    );
+    const contacts = await hubspotService.getContacts(hubId, req.query.search || "");
 
     res.json(contacts);
   } catch (error) {
@@ -120,36 +117,7 @@ app.post("/campaigns", async (req, res) => {
       });
     }
 
-    const campaign = await smsCampaignRepository.createCampaign(
-      hubId,
-      contactIds
-    );
-
-    res.json(campaign);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-});
-
-app.post("/campaigns", async (req, res) => {
-  try {
-    const { hubId, contactIds } = req.body;
-
-    if (!hubId) {
-      return res.status(400).json({
-        success: false,
-        message: "hubId is required.",
-      });
-    }
-
-    const campaign = await smsCampaignRepository.createCampaign(
-      hubId,
-      contactIds
-    );
+    const campaign = await smsCampaignRepository.createCampaign(hubId, contactIds);
 
     res.json(campaign);
   } catch (error) {
