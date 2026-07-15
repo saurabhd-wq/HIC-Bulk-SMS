@@ -157,7 +157,8 @@ app.get("/campaigns/:id/contacts", async (req, res) => {
     const campaign = await smsCampaignRepository.getCampaign(
       req.params.id
     );
-
+    console.log("Campaign:", campaign);
+console.log("Campaign hub_id:", campaign.hub_id);
     if (!campaign) {
       return res.status(404).json({
         success: false,
