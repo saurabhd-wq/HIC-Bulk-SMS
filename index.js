@@ -66,16 +66,42 @@ app.get("/oauth-callback", async (req, res) => {
 
 /* Contacts */
 
+// app.get("/contacts", async (req, res) => {
+//   try {
+//     const contacts = await hubspotService.getContacts(
+//       req.query.search || ""
+//     );
+
+//     res.json(contacts);
+//   } catch (error) {
+//     console.error(error);
+
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// });
+
 app.get("/contacts", async (req, res) => {
   try {
+    const hubId = Number(req.query.hubId);
+
+    if (!hubId) {
+      return res.status(400).json({
+        success: false,
+        message: "hubId is required.",
+      });
+    }
+
     const contacts = await hubspotService.getContacts(
+      hubId,
       req.query.search || ""
     );
 
     res.json(contacts);
   } catch (error) {
     console.error(error);
-
     res.status(500).json({
       success: false,
       message: error.message,
@@ -85,26 +111,52 @@ app.get("/contacts", async (req, res) => {
 
 /* Campaign */
 
+// app.post("/campaigns", async (req, res) => {
+//   try {
+//     const { contactIds } = req.body;
+
+//     const campaign = await smsCampaignRepository.createCampaign(
+//       246694241,
+//       contactIds
+//     );
+
+//     res.json(campaign);
+//   } catch (error) {
+//     console.error(error);
+
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// });
+
+
 app.post("/campaigns", async (req, res) => {
   try {
-    const { contactIds } = req.body;
+    const { hubId, contactIds } = req.body;
+
+    if (!hubId) {
+      return res.status(400).json({
+        success: false,
+        message: "hubId is required.",
+      });
+    }
 
     const campaign = await smsCampaignRepository.createCampaign(
-      246694241,
+      hubId,
       contactIds
     );
 
     res.json(campaign);
   } catch (error) {
     console.error(error);
-
     res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 });
-
 app.get("/campaigns/:id", async (req, res) => {
   try {
     const campaign = await smsCampaignRepository.getCampaign(

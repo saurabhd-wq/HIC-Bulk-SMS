@@ -2,8 +2,6 @@ const axios = require("axios");
 const installationRepository = require("../repositories/installationRepository");
 const oauthService = require("./oauthService");
 
-const HUB_ID = 246694241;
-
 async function fetchContacts(accessToken) {
   const response = await axios.get(
     "https://api.hubapi.com/crm/v3/objects/contacts",
@@ -28,8 +26,8 @@ async function fetchContacts(accessToken) {
   }));
 }
 
-async function getContacts(search = "") {
-  let installation = await installationRepository.getInstallation(HUB_ID);
+async function getContacts(hubId, search = "") {
+  const installation = await installationRepository.getInstallation(hubId);
 
   if (!installation) {
     throw new Error("HubSpot installation not found.");
@@ -44,10 +42,7 @@ async function getContacts(search = "") {
       throw error;
     }
 
-    console.log("Access token expired. Refreshing...");
-
-    const newAccessToken = await oauthService.refreshAccessToken(HUB_ID);
-
+    const newAccessToken = await oauthService.refreshAccessToken(hubId);
     contacts = await fetchContacts(newAccessToken);
   }
 
