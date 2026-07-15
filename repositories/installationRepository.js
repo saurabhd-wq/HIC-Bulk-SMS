@@ -32,6 +32,8 @@ async function saveInstallation({
 }
 
 async function getInstallation(hubId) {
+  console.log("Looking for Hub ID:", hubId);
+
   const result = await pool.query(
     `
       SELECT *
@@ -40,6 +42,8 @@ async function getInstallation(hubId) {
     `,
     [hubId]
   );
+
+  console.log("Installation:", result.rows);
 
   return result.rows[0] || null;
 }
