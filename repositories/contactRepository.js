@@ -1,9 +1,11 @@
 const hubspotService = require("../services/hubspotService");
 
-async function getContactsByIds(contactIds) {
-  const contacts = await hubspotService.getContacts();
+async function getContactsByIds(hubId, contactIds) {
+  const contacts = await hubspotService.getContacts(hubId);
 
-  return contacts.filter(contact => contactIds.includes(contact.id));
+  return contacts.filter((contact) =>
+    contactIds.includes(contact.id)
+  );
 }
 
 module.exports = {

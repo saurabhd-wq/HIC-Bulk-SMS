@@ -167,9 +167,10 @@ console.log("Campaign hub_id:", campaign.hub_id);
     }
 
     const contacts =
-      await contactRepository.getContactsByIds(
-        campaign.contact_ids
-      );
+  await contactRepository.getContactsByIds(
+    campaign.hub_id,
+    campaign.contact_ids
+  );
 
     res.json(contacts);
   } catch (error) {
@@ -208,9 +209,10 @@ app.post("/campaigns/:id/send", async (req, res) => {
     }
 
     const contacts =
-      await contactRepository.getContactsByIds(
-        campaign.contact_ids
-      );
+  await contactRepository.getContactsByIds(
+    campaign.hub_id,
+    campaign.contact_ids
+  );
 
     let success = 0;
     let failed = 0;
