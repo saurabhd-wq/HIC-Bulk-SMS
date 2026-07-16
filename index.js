@@ -10,6 +10,8 @@ const installationRepository = require("./repositories/installationRepository");
 const smsCampaignRepository = require("./repositories/smsCampaignRepository");
 const contactRepository = require("./repositories/contactRepository");
 
+const conversationRoutes = require("./routes/conversationRoutes");
+
 const twilioService = require("./services/twilioService");
 
 const app = express();
@@ -64,24 +66,7 @@ app.get("/oauth-callback", async (req, res) => {
   }
 });
 
-/* Contacts */
-
-// app.get("/contacts", async (req, res) => {
-//   try {
-//     const contacts = await hubspotService.getContacts(
-//       req.query.search || ""
-//     );
-
-//     res.json(contacts);
-//   } catch (error) {
-//     console.error(error);
-
-//     res.status(500).json({
-//       success: false,
-//       message: error.message,
-//     });
-//   }
-// });
+app.use("/api/conversations", conversationRoutes);
 
 app.get("/contacts", async (req, res) => {
   try {
