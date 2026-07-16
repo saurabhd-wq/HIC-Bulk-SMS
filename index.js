@@ -9,6 +9,7 @@ const hubspotService = require("./services/hubspotService");
 const installationRepository = require("./repositories/installationRepository");
 const smsCampaignRepository = require("./repositories/smsCampaignRepository");
 const contactRepository = require("./repositories/contactRepository");
+const conversationSendRoute = require("./routes/conversationSendRoute");
 
 const conversationRoutes = require("./routes/conversationRoutes");
 
@@ -17,6 +18,7 @@ const twilioService = require("./services/twilioService");
 const app = express();
 
 app.use(express.json());
+app.use("/api/conversations/send", conversationSendRoute);
 
 app.get("/", (req, res) => {
   res.send("HubSpot OAuth Service is running.");
