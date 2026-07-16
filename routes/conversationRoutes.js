@@ -32,7 +32,8 @@ router.get("/:contactId", async (req, res) => {
         firstName: contact.firstName,
         lastName: contact.lastName,
         email: contact.email,
-        phoneNumber: contact.mobilePhone || contact.phone || "",
+        phone: contact.phone,
+        mobilePhone: contact.mobilePhone,
       },
       messages,
     });
