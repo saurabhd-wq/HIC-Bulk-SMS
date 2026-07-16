@@ -63,6 +63,51 @@ async function getContacts(hubId, search = "") {
   });
 }
 
+async function getContactById(hubId, contactId) {
+  const installation = await installationRepository.getInstallation(hubId);
+
+  if (!installation) {
+    throw new Error("HubSpot installation not found.");
+  }
+
+  async function fetchContact(accessToken) {
+    const response = await axios.get(
+      `https://api.hubapi.com/crm/v3/objects/contacts/${contactId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        params: {
+          properties: "firstname,lastname,phone,mobilephone,email",
+        },
+      }
+    );
+
+    const contact = response.data;
+
+    return {
+      id: contact.id,
+      firstName: contact.properties.firstname || "",
+      lastName: contact.properties.lastname || "",
+      email: contact.properties.email || "",
+      phone: contact.properties.phone || "",
+      mobilePhone: contact.properties.mobilephone || "",
+    };
+  }
+
+  try {
+    return await fetchContact(installation.access_token);
+  } catch (error) {
+    if (error.response?.status !== 401) {
+      throw error;
+    }
+
+    const newAccessToken = await oauthService.refreshAccessToken(hubId);
+    return await fetchContact(newAccessToken);
+  }
+}
+
 module.exports = {
   getContacts,
+  getContactById,
 };
