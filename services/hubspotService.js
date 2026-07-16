@@ -3,26 +3,28 @@ const installationRepository = require("../repositories/installationRepository")
 const oauthService = require("./oauthService");
 
 async function fetchContacts(accessToken) {
-  const response = await axios.get(
-    "https://api.hubapi.com/crm/v3/objects/contacts",
-    {
+  const [contactsResponse, ownerMap] = await Promise.all([
+    axios.get("https://api.hubapi.com/crm/v3/objects/contacts", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
       params: {
         limit: 100,
-        properties: "firstname,lastname,email,phone,mobilephone",
+        properties: "firstname,lastname,email,phone,mobilephone,company,hubspot_owner_id",
       },
-    }
-  );
+    }),
+    fetchOwners(accessToken),
+  ]);
 
-  return response.data.results.map((contact) => ({
+  return contactsResponse.data.results.map((contact) => ({
     id: contact.id,
     firstName: contact.properties.firstname || "",
     lastName: contact.properties.lastname || "",
     email: contact.properties.email || "",
     phone: contact.properties.phone || "",
     mobilePhone: contact.properties.mobilephone || "",
+    company: contact.properties.company || "",
+    contactOwner: ownerMap[contact.properties.hubspot_owner_id] || "",
   }));
 }
 
@@ -61,6 +63,26 @@ async function getContacts(hubId, search = "") {
       contact.mobilePhone.toLowerCase().includes(searchText)
     );
   });
+}
+async function fetchOwners(accessToken) {
+  const response = await axios.get(
+    "https://api.hubapi.com/crm/v3/owners",
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      params: {
+        limit: 100,
+      },
+    }
+  );
+
+  const ownerMap = {};
+  response.data.results.forEach((owner) => {
+    ownerMap[owner.id] = `${owner.firstName || ""} ${owner.lastName || ""}`.trim();
+  });
+
+  return ownerMap;
 }
 
 module.exports = {
