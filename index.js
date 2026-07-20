@@ -11,6 +11,10 @@ const smsCampaignRepository = require("./repositories/smsCampaignRepository");
 const contactRepository = require("./repositories/contactRepository");
 const conversationSendRoute = require("./routes/conversationSendRoute");
 
+const {
+  saveOutgoingMessage,
+} = require("./repositories/conversationRepository");
+
 const conversationRoutes = require("./routes/conversationRoutes");
 
 const twilioService = require("./services/twilioService");
@@ -228,6 +232,13 @@ app.post("/campaigns/:id/send", async (req, res) => {
             message
           );
 
+        await saveOutgoingMessage({
+        contactId: contact.id,
+        phoneNumber: phone,
+        twilioMessageSid: sms.sid,
+        message: message.trim(),
+        status: sms.status,
+        });
         success++;
  
         results.push({
