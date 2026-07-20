@@ -14,7 +14,6 @@ const conversationSendRoute = require("./routes/conversationSendRoute");
 const conversationRoutes = require("./routes/conversationRoutes");
 
 const twilioService = require("./services/twilioService");
-const twilioWebhookRoute = require("./routes/twilioWebhookRoute");
 
 const app = express();
 
@@ -70,7 +69,6 @@ app.get("/oauth-callback", async (req, res) => {
 });
 
 app.use("/api/conversations", conversationRoutes);
-app.use("/api/twilio/webhook", twilioWebhookRoute);
 
 app.get("/contacts", async (req, res) => {
   try {
