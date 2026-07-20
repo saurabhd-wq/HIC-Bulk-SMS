@@ -110,5 +110,4 @@ async function getContactById(hubId, contactId) {
 module.exports = {
   getContacts,
   getContactById,
-  getContactByPhone,
 };
