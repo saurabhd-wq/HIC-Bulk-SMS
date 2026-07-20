@@ -1,6 +1,6 @@
 const pool = require("../config/database");
 
-async function getConversationByContactId(contactId) {
+async function getConversationByContactId(contactId, phoneNumber) {
   const query = `
     SELECT
       id,
@@ -12,11 +12,14 @@ async function getConversationByContactId(contactId) {
       status,
       created_at
     FROM sms_conversations
-    WHERE hubspot_contact_id = $1
+    WHERE hubspot_contact_id = $1 AND phone_number = $2
     ORDER BY created_at ASC;
   `;
 
-  const result = await pool.query(query, [contactId]);
+ const result = await pool.query(query, [
+  contactId,
+  phoneNumber,
+]);
 
   return result.rows;
 }
