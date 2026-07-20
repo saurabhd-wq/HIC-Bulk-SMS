@@ -48,7 +48,21 @@ async function getInstallation(hubId) {
   return result.rows[0] || null;
 }
 
+async function getAllInstallations() {
+  const result = await pool.query(`
+    SELECT
+      hub_id,
+      access_token,
+      refresh_token,
+      expires_at
+    FROM hubspot_installations
+  `);
+
+  return result.rows;
+}
+
 module.exports = {
   saveInstallation,
   getInstallation,
+  getAllInstallations,
 };
