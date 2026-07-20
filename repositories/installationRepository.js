@@ -51,5 +51,4 @@ async function getInstallation(hubId) {
 module.exports = {
   saveInstallation,
   getInstallation,
-  getAllInstallations,
 };
