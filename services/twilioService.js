@@ -5,8 +5,10 @@ async function sendSMS(hubId, to, body) {
   const credentials = await getCredentialsByHubId(hubId);
 
   if (!credentials) {
-    throw new Error("Twilio configuration not found for this HubSpot account.");
-  }
+    throw new Error(
+    "Twilio is not set up for this HubSpot account. Click 'Setup Twilio' and configure your Twilio credentials before sending SMS."
+    );
+    }   
 
   const client = twilio(
     credentials.account_sid,
