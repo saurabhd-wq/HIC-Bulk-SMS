@@ -57,6 +57,7 @@ router.post("/", async (req, res) => {
 
     // Send SMS using existing Twilio service
     const twilioResponse = await sendSMS(
+      hubId,
       phoneNumber,
       message.trim()
     );

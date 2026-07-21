@@ -32,6 +32,25 @@ async function saveCredentials({
 
   return rows[0];
 }
+const pool = require("../config/database");
+
+async function getCredentialsByHubId(hubId) {
+  const { rows } = await pool.query(
+    `
+      SELECT *
+      FROM twilio_credentials
+      WHERE hub_id = $1
+    `,
+    [hubId]
+  );
+
+  return rows[0] || null;
+}
+
+module.exports = {
+  saveCredentials,
+  getCredentialsByHubId,
+};
 
 module.exports = {
   saveCredentials,

@@ -1,15 +1,20 @@
-require("dotenv").config();
-
 const twilio = require("twilio");
+const { getCredentialsByHubId } = require("../repositories/twilioRepository");
 
-const client = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
+async function sendSMS(hubId, to, body) {
+  const credentials = await getCredentialsByHubId(hubId);
 
-async function sendSMS(to, body) {
+  if (!credentials) {
+    throw new Error("Twilio configuration not found for this HubSpot account.");
+  }
+
+  const client = twilio(
+    credentials.account_sid,
+    credentials.auth_token
+  );
+
   return await client.messages.create({
-    from: process.env.TWILIO_PHONE_NUMBER,
+    from: credentials.from_number,
     to,
     body,
   });
