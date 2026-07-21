@@ -17,6 +17,7 @@ const {
 } = require("./repositories/conversationRepository");
 
 const conversationRoutes = require("./routes/conversationRoutes");
+const migrationRoute = require("./routes/migrationRoute");
 
 const twilioService = require("./services/twilioService");
 
@@ -25,6 +26,7 @@ const app = express();
 app.use(express.json());
 app.use("/api/conversations/send", conversationSendRoute);
 app.use("/api/twilio/setup", twilioSetupRoute);
+app.use("/api/migrate", migrationRoute);
 
 app.get("/", (req, res) => {
   res.send("HubSpot OAuth Service is running.");
