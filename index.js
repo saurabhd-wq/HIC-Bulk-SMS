@@ -230,7 +230,7 @@ app.post("/campaigns/:id/send", async (req, res) => {
       try {
         const sms =
           await twilioService.sendSMS(
-            compaign.hub_id,
+            campaign.hub_id,
             phone,
             message
           );
