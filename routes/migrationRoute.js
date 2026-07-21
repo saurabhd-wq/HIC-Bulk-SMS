@@ -30,5 +30,19 @@ router.get("/create-twilio-table", async (req, res) => {
     });
   }
 });
+router.get("/twilio-configs", async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      "SELECT id, hub_id, account_sid, from_number, created_at FROM twilio_credentials"
+    );
+
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+});
 
 module.exports = router;
