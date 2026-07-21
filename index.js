@@ -10,6 +10,7 @@ const installationRepository = require("./repositories/installationRepository");
 const smsCampaignRepository = require("./repositories/smsCampaignRepository");
 const contactRepository = require("./repositories/contactRepository");
 const conversationSendRoute = require("./routes/conversationSendRoute");
+const twilioSetupRoute = require("./routes/twilioSetupRoute");
 
 const {
   saveOutgoingMessage,
@@ -23,6 +24,7 @@ const app = express();
 
 app.use(express.json());
 app.use("/api/conversations/send", conversationSendRoute);
+app.use("/api/twilio/setup", twilioSetupRoute);
 
 app.get("/", (req, res) => {
   res.send("HubSpot OAuth Service is running.");
