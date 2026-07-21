@@ -32,7 +32,6 @@ async function saveCredentials({
 
   return rows[0];
 }
-const pool = require("../config/database");
 
 async function getCredentialsByHubId(hubId) {
   const { rows } = await pool.query(
