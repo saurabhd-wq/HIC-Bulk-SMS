@@ -53,4 +53,5 @@ module.exports = {
 
 module.exports = {
   saveCredentials,
+    getCredentialsByHubId,
 };
