@@ -45,8 +45,75 @@ async function updateMessage(id, message) {
   return result.rows[0];
 }
 
+// ---- NEW: scheduling support ----
+
+async function scheduleCampaign(id, message, scheduledAt, timezone) {
+  const result = await pool.query(
+    `
+    UPDATE sms_campaigns
+    SET
+      message = $2,
+      scheduled_at = $3,
+      timezone = $4,
+      status = 'SCHEDULED',
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = $1
+    RETURNING *;
+    `,
+    [id, message, scheduledAt, timezone]
+  );
+
+  return result.rows[0];
+}
+
+async function getDueScheduledCampaigns() {
+  const result = await pool.query(
+    `
+    SELECT *
+    FROM sms_campaigns
+    WHERE status = 'SCHEDULED'
+      AND scheduled_at <= CURRENT_TIMESTAMP
+    ORDER BY scheduled_at ASC;
+    `
+  );
+
+  return result.rows;
+}
+
+async function markCampaignSent(id) {
+  const result = await pool.query(
+    `
+    UPDATE sms_campaigns
+    SET status = 'SENT', updated_at = CURRENT_TIMESTAMP
+    WHERE id = $1
+    RETURNING *;
+    `,
+    [id]
+  );
+
+  return result.rows[0];
+}
+
+async function markCampaignFailed(id) {
+  const result = await pool.query(
+    `
+    UPDATE sms_campaigns
+    SET status = 'FAILED', updated_at = CURRENT_TIMESTAMP
+    WHERE id = $1
+    RETURNING *;
+    `,
+    [id]
+  );
+
+  return result.rows[0];
+}
+
 module.exports = {
   createCampaign,
   getCampaign,
   updateMessage,
+  scheduleCampaign,
+  getDueScheduledCampaigns,
+  markCampaignSent,
+  markCampaignFailed,
 };

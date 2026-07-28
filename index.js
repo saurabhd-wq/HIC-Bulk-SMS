@@ -12,6 +12,9 @@ const contactRepository = require("./repositories/contactRepository");
 const conversationSendRoute = require("./routes/conversationSendRoute");
 const twilioSetupRoute = require("./routes/twilioSetupRoute");
 
+const smsSendService = require("./services/smsSendService");
+const schedulerService = require("./services/schedulerService");
+
 const {
   saveOutgoingMessage,
 } = require("./repositories/conversationRepository");
@@ -189,10 +192,7 @@ app.post("/campaigns/:id/send", async (req, res) => {
       });
     }
 
-    const campaign =
-      await smsCampaignRepository.getCampaign(
-        req.params.id
-      );
+    const campaign = await smsCampaignRepository.getCampaign(req.params.id);
 
     if (!campaign) {
       return res.status(404).json({
@@ -201,70 +201,9 @@ app.post("/campaigns/:id/send", async (req, res) => {
       });
     }
 
-    const contacts =
-  await contactRepository.getContactsByIds(
-    campaign.hub_id,
-    campaign.contact_ids
-  );
+    const result = await smsSendService.sendCampaignMessage(campaign, message);
 
-    let success = 0;
-    let failed = 0;
-
-    const results = [];
-
-    for (const contact of contacts) {
-      const phone =
-        contact.phone || contact.mobilePhone;
-
-      if (!phone) {
-        failed++;
-
-        results.push({
-          contact: contact.email,
-          status: "No Phone",
-        });
-
-        continue;
-      }
-
-      try {
-        const sms =
-          await twilioService.sendSMS(
-            campaign.hub_id,
-            phone,
-            message
-          );
-
-        await saveOutgoingMessage({
-        contactId: contact.id,
-        phoneNumber: phone,
-        twilioMessageSid: sms.sid,
-        message: message.trim(),
-        status: sms.status,
-        });
-        success++;
- 
-        results.push({
-          contact: contact.email,
-          status: "Sent",
-          sid: sms.sid,
-        });
-      } catch (err) {
-        failed++;
-
-        results.push({
-          contact: contact.email,
-          status: err.message,
-        });
-      }
-    }
-
-    res.json({
-      total: contacts.length,
-      success,
-      failed,
-      results,
-    });
+    res.json(result);
   } catch (error) {
     console.error(error);
 
@@ -274,6 +213,71 @@ app.post("/campaigns/:id/send", async (req, res) => {
     });
   }
 });
+
+/* SCHEDULE SMS */
+
+app.post("/campaigns/:id/schedule", async (req, res) => {
+  try {
+    const { message, scheduledAt, timezone } = req.body;
+
+    if (!message || message.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Message is required.",
+      });
+    }
+
+    if (!scheduledAt) {
+      return res.status(400).json({
+        success: false,
+        message: "scheduledAt is required.",
+      });
+    }
+
+    const scheduledDate = new Date(scheduledAt);
+
+    if (isNaN(scheduledDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "scheduledAt must be a valid date/time.",
+      });
+    }
+
+    if (scheduledDate.getTime() <= Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: "scheduledAt must be in the future.",
+      });
+    }
+
+    const campaign = await smsCampaignRepository.getCampaign(req.params.id);
+
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: "Campaign not found.",
+      });
+    }
+
+    const updated = await smsCampaignRepository.scheduleCampaign(
+      req.params.id,
+      message,
+      scheduledDate.toISOString(),
+      timezone || "UTC"
+    );
+
+    res.json(updated);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+schedulerService.start();
 
 app.listen(env.PORT, () => {
   console.log(
