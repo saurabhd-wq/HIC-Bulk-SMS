@@ -108,6 +108,23 @@ async function markCampaignFailed(id) {
   return result.rows[0];
 }
 
+async function getCampaignsByStatus(hubId, status) {
+  const result = await pool.query(
+    `
+    SELECT *
+    FROM sms_campaigns
+    WHERE hub_id = $1
+      AND status = $2
+    ORDER BY
+      CASE WHEN status = 'SCHEDULED' THEN scheduled_at ELSE updated_at END ASC,
+      id DESC;
+    `,
+    [hubId, status]
+  );
+
+  return result.rows;
+}
+
 module.exports = {
   createCampaign,
   getCampaign,
@@ -116,4 +133,5 @@ module.exports = {
   getDueScheduledCampaigns,
   markCampaignSent,
   markCampaignFailed,
+  getCampaignsByStatus,
 };
