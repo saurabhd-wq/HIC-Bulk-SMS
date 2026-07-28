@@ -124,6 +124,45 @@ app.post("/campaigns", async (req, res) => {
     });
   }
 });
+/* CAMPAIGN HISTORY */
+
+app.get("/campaigns/history", async (req, res) => {
+  try {
+    const hubId = Number(req.query.hubId);
+    const status = req.query.status;
+
+    if (!hubId) {
+      return res.status(400).json({
+        success: false,
+        message: "hubId is required.",
+      });
+    }
+
+    const allowedStatuses = ["SCHEDULED", "SENT", "FAILED"];
+
+    if (!status || !allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "status must be one of: SCHEDULED, SENT, FAILED.",
+      });
+    }
+
+    const campaigns = await smsCampaignRepository.getCampaignsByStatus(
+      hubId,
+      status
+    );
+
+    res.json(campaigns);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+schedulerService.start();
 app.get("/campaigns/:id", async (req, res) => {
   try {
     const campaign = await smsCampaignRepository.getCampaign(
@@ -276,45 +315,7 @@ app.post("/campaigns/:id/schedule", async (req, res) => {
     });
   }
 });
-/* CAMPAIGN HISTORY */
 
-app.get("/campaigns/history", async (req, res) => {
-  try {
-    const hubId = Number(req.query.hubId);
-    const status = req.query.status;
-
-    if (!hubId) {
-      return res.status(400).json({
-        success: false,
-        message: "hubId is required.",
-      });
-    }
-
-    const allowedStatuses = ["SCHEDULED", "SENT", "FAILED"];
-
-    if (!status || !allowedStatuses.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: "status must be one of: SCHEDULED, SENT, FAILED.",
-      });
-    }
-
-    const campaigns = await smsCampaignRepository.getCampaignsByStatus(
-      hubId,
-      status
-    );
-
-    res.json(campaigns);
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-});
-schedulerService.start();
 
 app.listen(env.PORT, () => {
   console.log(
