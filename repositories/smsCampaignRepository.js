@@ -125,6 +125,39 @@ async function getCampaignsByStatus(hubId, status) {
   return result.rows;
 }
 
+async function updateScheduledCampaign(id, message, scheduledAt, timezone) {
+  const result = await pool.query(
+    `
+    UPDATE sms_campaigns
+    SET
+      message = $2,
+      scheduled_at = $3,
+      timezone = $4,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = $1
+      AND status = 'SCHEDULED'
+    RETURNING *;
+    `,
+    [id, message, scheduledAt, timezone]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function deleteScheduledCampaign(id) {
+  const result = await pool.query(
+    `
+    DELETE FROM sms_campaigns
+    WHERE id = $1
+      AND status = 'SCHEDULED'
+    RETURNING *;
+    `,
+    [id]
+  );
+
+  return result.rows[0] || null;
+}
+
 module.exports = {
   createCampaign,
   getCampaign,
@@ -134,4 +167,6 @@ module.exports = {
   markCampaignSent,
   markCampaignFailed,
   getCampaignsByStatus,
+  updateScheduledCampaign,
+  deleteScheduledCampaign,
 };

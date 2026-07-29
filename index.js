@@ -315,7 +315,104 @@ app.post("/campaigns/:id/schedule", async (req, res) => {
     });
   }
 });
+app.put("/campaigns/:id", async (req, res) => {
+  try {
+    const { message, scheduledAt, timezone } = req.body;
 
+    if (!message || message.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Message is required.",
+      });
+    }
+
+    if (!scheduledAt) {
+      return res.status(400).json({
+        success: false,
+        message: "scheduledAt is required.",
+      });
+    }
+
+    const scheduledDate = new Date(scheduledAt);
+
+    if (isNaN(scheduledDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "scheduledAt must be a valid date/time.",
+      });
+    }
+
+    const campaign = await smsCampaignRepository.getCampaign(req.params.id);
+
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: "Campaign not found.",
+      });
+    }
+
+    if (campaign.status !== "SCHEDULED") {
+      return res.status(400).json({
+        success: false,
+        message: "Only scheduled campaigns can be edited.",
+      });
+    }
+
+    const updated = await smsCampaignRepository.updateScheduledCampaign(
+      req.params.id,
+      message,
+      scheduledDate.toISOString(),
+      timezone || "UTC"
+    );
+
+    res.json(updated);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+/* DELETE SCHEDULED CAMPAIGN */
+
+app.delete("/campaigns/:id", async (req, res) => {
+  try {
+    const campaign = await smsCampaignRepository.getCampaign(req.params.id);
+
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: "Campaign not found.",
+      });
+    }
+
+    if (campaign.status !== "SCHEDULED") {
+      return res.status(400).json({
+        success: false,
+        message: "Only scheduled campaigns can be deleted.",
+      });
+    }
+
+    const deleted = await smsCampaignRepository.deleteScheduledCampaign(
+      req.params.id
+    );
+
+    res.json({
+      success: true,
+      deleted,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
 
 app.listen(env.PORT, () => {
   console.log(
