@@ -116,7 +116,7 @@ async function getCampaignsByStatus(hubId, status) {
     WHERE hub_id = $1
       AND status = $2
     ORDER BY
-      CASE WHEN status = 'SCHEDULED' THEN scheduled_at ELSE updated_at END ASC,
+      CASE WHEN status = 'SCHEDULED' THEN scheduled_at ELSE updated_at END DESC,
       id DESC;
     `,
     [hubId, status]
