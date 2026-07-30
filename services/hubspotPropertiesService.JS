@@ -125,6 +125,7 @@ async function getObjectValues(hubId, mergeObjectType, objectId, propertyNames) 
   return response.data.properties || {};
 }
 
+
 module.exports = {
   OBJECT_TYPE_MAP,
   getProperties,
