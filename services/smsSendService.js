@@ -1,6 +1,7 @@
 const contactRepository = require("../repositories/contactRepository");
 const twilioService = require("./twilioService");
 const { saveOutgoingMessage } = require("../repositories/conversationRepository");
+const mergeFieldService = require("./mergeFieldService"); // NEW
 
 async function sendCampaignMessage(campaign, message) {
   const contacts = await contactRepository.getContactsByIds(
@@ -18,48 +19,39 @@ async function sendCampaignMessage(campaign, message) {
 
     if (!phone) {
       failed++;
-
-      results.push({
-        contact: contact.email,
-        status: "No Phone",
-      });
-
+      results.push({ contact: contact.email, status: "No Phone" });
       continue;
     }
 
     try {
-      const sms = await twilioService.sendSMS(campaign.hub_id, phone, message);
+      // NEW: resolve {{contact.x}} / {{company.x}} / {{deal.x}} / {{ticket.x}}
+      // per recipient. If the message has no merge tokens this just returns
+      // the original message unchanged.
+      const personalizedMessage = await mergeFieldService.resolveMessageForContact(
+        campaign.hub_id,
+        message,
+        contact
+      );
+
+      const sms = await twilioService.sendSMS(campaign.hub_id, phone, personalizedMessage);
 
       await saveOutgoingMessage({
         contactId: contact.id,
         phoneNumber: phone,
         twilioMessageSid: sms.sid,
-        message: message.trim(),
+        message: personalizedMessage.trim(),
         status: sms.status,
       });
       success++;
 
-      results.push({
-        contact: contact.email,
-        status: "Sent",
-        sid: sms.sid,
-      });
+      results.push({ contact: contact.email, status: "Sent", sid: sms.sid });
     } catch (err) {
       failed++;
-
-      results.push({
-        contact: contact.email,
-        status: err.message,
-      });
+      results.push({ contact: contact.email, status: err.message });
     }
   }
 
-  return {
-    total: contacts.length,
-    success,
-    failed,
-    results,
-  };
+  return { total: contacts.length, success, failed, results };
 }
 
 module.exports = {

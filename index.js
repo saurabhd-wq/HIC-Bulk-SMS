@@ -15,6 +15,8 @@ const twilioSetupRoute = require("./routes/twilioSetupRoute");
 const smsSendService = require("./services/smsSendService");
 const schedulerService = require("./services/schedulerService");
 
+const mergeFieldRoutes = require("./routes/mergeFieldRoutes");
+
 const {
   saveOutgoingMessage,
 } = require("./repositories/conversationRepository");
@@ -28,6 +30,7 @@ const app = express();
 app.use(express.json());
 app.use("/api/conversations/send", conversationSendRoute);
 app.use("/api/twilio/setup", twilioSetupRoute);
+app.use("/api/merge-fields", mergeFieldRoutes);
 
 app.get("/", (req, res) => {
   res.send("HubSpot OAuth Service is running.");
