@@ -9,7 +9,7 @@ const OBJECT_TYPE_MAP = {
   deal: "deals",
   ticket: "tickets",
 };
-
+  
 // Simple in-memory cache so the popup doesn't re-hit the Properties API on
 // every open. Keyed by `${hubId}:${mergeObjectType}`. TTL keeps newly
 // created custom properties showing up without a service restart.
