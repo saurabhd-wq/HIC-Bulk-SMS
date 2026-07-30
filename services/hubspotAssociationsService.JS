@@ -71,6 +71,7 @@ async function getAssociatedIdsForContact(hubId, contactId) {
   return Object.fromEntries(lookups);
 }
 
+
 module.exports = {
   getAssociatedIdsForContact,
 };
