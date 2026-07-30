@@ -3,6 +3,8 @@ const hubspotAssociationsService = require("./hubspotAssociationsService");
 
 const MERGE_TOKEN_REGEX = /{{\s*(contact|company|deal|ticket)\.([a-zA-Z0-9_]+)\s*}}/g;
 
+
+
 function extractTokens(message) {
   const tokens = [];
   let match;
