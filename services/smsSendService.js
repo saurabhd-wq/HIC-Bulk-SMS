@@ -1,7 +1,7 @@
 const contactRepository = require("../repositories/contactRepository");
 const twilioService = require("./twilioService");
 const { saveOutgoingMessage } = require("../repositories/conversationRepository");
-const mergeFieldService = require("./mergeFieldService"); // NEW
+const mergeFieldService = require("./hubspotPropertiesService"); // NEW
 
 async function sendCampaignMessage(campaign, message) {
   const contacts = await contactRepository.getContactsByIds(
