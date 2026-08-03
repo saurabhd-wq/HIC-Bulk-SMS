@@ -3,6 +3,7 @@ const router = express.Router();
 
 const { sendSMS } = require("../services/twilioService");
 const { getContactById } = require("../services/hubspotService");
+const mergeFieldService = require("../services/mergeFieldService"); // NEW
 
 const {
   saveOutgoingMessage,
@@ -55,11 +56,20 @@ router.post("/", async (req, res) => {
       });
     }
 
+    // NEW: resolve {{contact.x}} / {{company.x}} / {{deal.x}} / {{ticket.x}}
+    // tokens for this contact before sending. If the message has no merge
+    // tokens this just returns the original message unchanged.
+    const personalizedMessage = await mergeFieldService.resolveMessageForContact(
+      hubId,
+      message.trim(),
+      contact
+    );
+
     // Send SMS using existing Twilio service
     const twilioResponse = await sendSMS(
       hubId,
       phoneNumber,
-      message.trim()
+      personalizedMessage
     );
 
     // Save conversation
@@ -67,7 +77,7 @@ router.post("/", async (req, res) => {
       contactId,
       phoneNumber,
       twilioMessageSid: twilioResponse.sid,
-      message: message.trim(),
+      message: personalizedMessage,
       status: twilioResponse.status,
     });
 
