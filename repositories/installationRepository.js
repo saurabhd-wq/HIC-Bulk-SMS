@@ -48,15 +48,7 @@ async function getInstallation(hubId) {
   return result.rows[0] || null;
 }
 
-async function getAllInstallations() {
-  const result = await pool.query(
-    `SELECT * FROM hubspot_installations ORDER BY hub_id ASC`
-  );
-  return result.rows;
-}
-
 module.exports = {
   saveInstallation,
   getInstallation,
-  getAllInstallations,
 };
