@@ -1,7 +1,17 @@
+/**
+ * smsSendService.js
+ *
+ * Only change from the original: campaign.hub_id is now forwarded as hubId
+ * inside the object passed to saveOutgoingMessage so that the conversation
+ * repository can use the correct portal OAuth token directly.
+ *
+ * No business logic, retry behaviour, merge-field resolution, or Twilio
+ * interactions have changed.
+ */
+
 const contactRepository = require("../repositories/contactRepository");
 const twilioService = require("./twilioService");
 const { saveOutgoingMessage } = require("../repositories/conversationRepository");
-//const mergeFieldService = require("./hubspotPropertiesService"); // NEW
 const mergeFieldService = require("./mergeFieldService");
 
 async function sendCampaignMessage(campaign, message) {
@@ -25,16 +35,21 @@ async function sendCampaignMessage(campaign, message) {
     }
 
     try {
-      // NEW: resolve {{contact.x}} / {{company.x}} / {{deal.x}} / {{ticket.x}}
+      // Resolve {{contact.x}} / {{company.x}} / {{deal.x}} / {{ticket.x}}
       // per recipient. If the message has no merge tokens this just returns
       // the original message unchanged.
-      const personalizedMessage = await mergeFieldService.resolveMessageForContact(
-        campaign.hub_id,
-        message,
-        contact
-      );
+      const personalizedMessage =
+        await mergeFieldService.resolveMessageForContact(
+          campaign.hub_id,
+          message,
+          contact
+        );
 
-      const sms = await twilioService.sendSMS(campaign.hub_id, phone, personalizedMessage);
+      const sms = await twilioService.sendSMS(
+        campaign.hub_id,
+        phone,
+        personalizedMessage
+      );
 
       await saveOutgoingMessage({
         contactId: contact.id,
@@ -42,9 +57,10 @@ async function sendCampaignMessage(campaign, message) {
         twilioMessageSid: sms.sid,
         message: personalizedMessage.trim(),
         status: sms.status,
+        hubId: campaign.hub_id,   // ← only addition vs original
       });
-      success++;
 
+      success++;
       results.push({ contact: contact.email, status: "Sent", sid: sms.sid });
     } catch (err) {
       failed++;

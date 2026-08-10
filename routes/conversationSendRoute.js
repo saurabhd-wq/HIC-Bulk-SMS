@@ -1,9 +1,19 @@
+/**
+ * conversationSendRoute.js
+ *
+ * Only change from the original: hubId is now forwarded as a field inside
+ * the object passed to saveOutgoingMessage so that the conversation
+ * repository can use the correct portal OAuth token directly.
+ *
+ * No route paths, response shapes, or business logic have changed.
+ */
+
 const express = require("express");
 const router = express.Router();
 
 const { sendSMS } = require("../services/twilioService");
 const { getContactById } = require("../services/hubspotService");
-const mergeFieldService = require("../services/mergeFieldService"); // NEW
+const mergeFieldService = require("../services/mergeFieldService");
 
 const {
   saveOutgoingMessage,
@@ -33,7 +43,7 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // Fetch latest contact details from HubSpot
+    // Fetch latest contact details from HubSpot.
     const contact = await getContactById(hubId, contactId);
 
     if (!contact) {
@@ -43,7 +53,7 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // Select phone based on user's choice
+    // Select phone based on user's choice.
     const phoneNumber =
       numberType === "mobilePhone"
         ? contact.mobilePhone
@@ -56,36 +66,35 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // NEW: resolve {{contact.x}} / {{company.x}} / {{deal.x}} / {{ticket.x}}
-    // tokens for this contact before sending. If the message has no merge
-    // tokens this just returns the original message unchanged.
+    // Resolve {{contact.x}} / {{company.x}} / {{deal.x}} / {{ticket.x}} tokens.
     const personalizedMessage = await mergeFieldService.resolveMessageForContact(
       hubId,
       message.trim(),
       contact
     );
 
-    // Send SMS using existing Twilio service
+    // Send SMS via Twilio.
     const twilioResponse = await sendSMS(
       hubId,
       phoneNumber,
       personalizedMessage
     );
 
-    // Save conversation
+    // Save conversation — hubId forwarded so the repository skips the
+    // cross-portal fallback and uses the correct token directly.
     const savedMessage = await saveOutgoingMessage({
       contactId,
       phoneNumber,
       twilioMessageSid: twilioResponse.sid,
       message: personalizedMessage,
       status: twilioResponse.status,
+      hubId,           // ← only addition vs original
     });
 
     return res.json({
       success: true,
       message: savedMessage,
     });
-
   } catch (error) {
     console.error("Conversation Send Error:", error);
 

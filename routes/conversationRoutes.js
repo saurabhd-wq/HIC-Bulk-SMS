@@ -1,3 +1,14 @@
+/**
+ * conversationRoutes.js
+ *
+ * Only change from the original: hubId is now forwarded as the optional
+ * third argument to getConversationByContactId so that the conversation
+ * repository can skip the cross-portal search and use the correct OAuth token
+ * directly.
+ *
+ * No route paths, response shapes, or business logic have changed.
+ */
+
 const express = require("express");
 const router = express.Router();
 
@@ -23,9 +34,15 @@ router.get("/:contactId", async (req, res) => {
     }
 
     const contact = await getContactById(hubId, contactId);
-    const phoneNumber = numberType === "mobilePhone"? contact.mobilePhone: contact.phone;
+    const phoneNumber =
+      numberType === "mobilePhone" ? contact.mobilePhone : contact.phone;
 
-    const messages = await getConversationByContactId(contactId, phoneNumber);
+    // Pass hubId so the repository uses the right portal token directly.
+    const messages = await getConversationByContactId(
+      contactId,
+      phoneNumber,
+      hubId          // ← only addition vs original
+    );
 
     res.json({
       success: true,
