@@ -57,4 +57,5 @@ async function getAllInstallations() {
 module.exports = {
   saveInstallation,
   getInstallation,
+  getAllInstallations,
 };

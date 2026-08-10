@@ -417,6 +417,33 @@ app.delete("/campaigns/:id", async (req, res) => {
   }
 });
 
+app.get("/debug/object-types", async (req, res) => {
+  const axios = require("axios");
+  const hubId = Number(req.query.hubId);
+ 
+  if (!hubId) return res.status(400).json({ message: "hubId required" });
+ 
+  try {
+    const installation = await installationRepository.getInstallation(hubId);
+    if (!installation) return res.status(404).json({ message: "Installation not found" });
+ 
+    const response = await axios.get(
+      "https://api.hubapi.com/crm/v3/schemas",
+      { headers: { Authorization: `Bearer ${installation.access_token}` } }
+    );
+ 
+    const types = response.data.results.map((s) => ({
+      name: s.name,           // this is what you put in HS_CAMPAIGN_OBJECT_TYPE
+      label: s.labels?.singular,
+      fullyQualifiedName: s.fullyQualifiedName,
+    }));
+ 
+    res.json(types);
+  } catch (err) {
+    res.status(500).json({ message: err.message, detail: err.response?.data });
+  }
+});
+
 app.listen(env.PORT, () => {
   console.log(
     `OAuth service listening on port ${env.PORT}`
