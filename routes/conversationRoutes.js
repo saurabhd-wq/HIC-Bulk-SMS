@@ -25,7 +25,7 @@ router.get("/:contactId", async (req, res) => {
     const contact = await getContactById(hubId, contactId);
     const phoneNumber = numberType === "mobilePhone"? contact.mobilePhone: contact.phone;
 
-    const messages = await getConversationByContactId(contactId, phoneNumber);
+    const messages = await getConversationByContactId(contactId, phoneNumber, hubId);
 
     res.json({
       success: true,

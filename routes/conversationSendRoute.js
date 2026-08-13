@@ -79,6 +79,7 @@ router.post("/", async (req, res) => {
       twilioMessageSid: twilioResponse.sid,
       message: personalizedMessage,
       status: twilioResponse.status,
+      hubId, 
     });
 
     return res.json({

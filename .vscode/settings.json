@@ -1,0 +1,21 @@
+{
+    "sqltools.connections": [
+        {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": true
+                }
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "dpg-d9at7njeo5us73dhk73g-a.ohio-postgres.render.com",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "HIC BULK SMS",
+            "group": "test",
+            "password": "DvWYJsL7DEpVmw7Dv3u8mGYSW4K0GRUu",
+            "username": "hic_bulk_sms_user",
+            "database": "hic_bulk_sms"
+        }
+    ]
+}
