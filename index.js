@@ -64,13 +64,17 @@ app.get("/oauth-callback", async (req, res) => {
 
     const tokenData = response.data;
 
+    // ✅ hub_id token info endpoint se fetch karo
+    const tokenInfoRes = await axios.get(
+      `https://api.hubapi.com/oauth/v1/access-tokens/${tokenData.access_token}`
+    );
+    const hubId = tokenInfoRes.data.hub_id;
+
     await installationRepository.saveInstallation({
-      hubId: tokenData.hub_id,
+      hubId,
       accessToken: tokenData.access_token,
       refreshToken: tokenData.refresh_token,
-      expiresAt: new Date(
-        Date.now() + tokenData.expires_in * 1000
-      ),
+      expiresAt: new Date(Date.now() + tokenData.expires_in * 1000),
     });
 
     res.send("Installation successful.");
@@ -127,6 +131,7 @@ app.post("/campaigns", async (req, res) => {
     });
   }
 });
+
 /* CAMPAIGN HISTORY */
 
 app.get("/campaigns/history", async (req, res) => {
@@ -158,19 +163,21 @@ app.get("/campaigns/history", async (req, res) => {
     res.json(campaigns);
   } catch (error) {
     console.error(error);
-
     res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 });
+
 schedulerService.start();
+
+/* GET SINGLE CAMPAIGN */
+
 app.get("/campaigns/:id", async (req, res) => {
   try {
-    const campaign = await smsCampaignRepository.getCampaign(
-      req.params.id
-    );
+    const hubId = Number(req.query.hubId); // ✅
+    const campaign = await smsCampaignRepository.getCampaign(req.params.id, hubId); // ✅
 
     if (!campaign) {
       return res.status(404).json({
@@ -182,7 +189,6 @@ app.get("/campaigns/:id", async (req, res) => {
     res.json(campaign);
   } catch (error) {
     console.error(error);
-
     res.status(500).json({
       success: false,
       message: error.message,
@@ -190,13 +196,13 @@ app.get("/campaigns/:id", async (req, res) => {
   }
 });
 
+/* GET CAMPAIGN CONTACTS */
+
 app.get("/campaigns/:id/contacts", async (req, res) => {
   try {
-    const campaign = await smsCampaignRepository.getCampaign(
-      req.params.id
-    );
-    console.log("Campaign:", campaign);
-console.log("Campaign hub_id:", campaign.hub_id);
+    const hubId = Number(req.query.hubId); // ✅
+    const campaign = await smsCampaignRepository.getCampaign(req.params.id, hubId); // ✅
+
     if (!campaign) {
       return res.status(404).json({
         success: false,
@@ -204,16 +210,14 @@ console.log("Campaign hub_id:", campaign.hub_id);
       });
     }
 
-    const contacts =
-  await contactRepository.getContactsByIds(
-    campaign.hub_id,
-    campaign.contact_ids
-  );
+    const contacts = await contactRepository.getContactsByIds(
+      campaign.hub_id,
+      campaign.contact_ids
+    );
 
     res.json(contacts);
   } catch (error) {
     console.error(error);
-
     res.status(500).json({
       success: false,
       message: error.message,
@@ -225,7 +229,7 @@ console.log("Campaign hub_id:", campaign.hub_id);
 
 app.post("/campaigns/:id/send", async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, hubId } = req.body; // ✅ hubId body se lo
 
     if (!message || message.trim() === "") {
       return res.status(400).json({
@@ -234,7 +238,7 @@ app.post("/campaigns/:id/send", async (req, res) => {
       });
     }
 
-    const campaign = await smsCampaignRepository.getCampaign(req.params.id);
+    const campaign = await smsCampaignRepository.getCampaign(req.params.id, hubId); // ✅
 
     if (!campaign) {
       return res.status(404).json({
@@ -248,7 +252,6 @@ app.post("/campaigns/:id/send", async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error(error);
-
     res.status(500).json({
       success: false,
       message: error.message,
@@ -260,7 +263,7 @@ app.post("/campaigns/:id/send", async (req, res) => {
 
 app.post("/campaigns/:id/schedule", async (req, res) => {
   try {
-    const { message, scheduledAt, timezone } = req.body;
+    const { message, scheduledAt, timezone, hubId } = req.body; // ✅
 
     if (!message || message.trim() === "") {
       return res.status(400).json({
@@ -292,7 +295,7 @@ app.post("/campaigns/:id/schedule", async (req, res) => {
       });
     }
 
-    const campaign = await smsCampaignRepository.getCampaign(req.params.id);
+    const campaign = await smsCampaignRepository.getCampaign(req.params.id, hubId); // ✅
 
     if (!campaign) {
       return res.status(404).json({
@@ -305,22 +308,25 @@ app.post("/campaigns/:id/schedule", async (req, res) => {
       req.params.id,
       message,
       scheduledDate.toISOString(),
-      timezone || "UTC"
+      timezone || "UTC",
+      hubId // ✅
     );
 
     res.json(updated);
   } catch (error) {
     console.error(error);
-
     res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 });
+
+/* EDIT SCHEDULED CAMPAIGN */
+
 app.put("/campaigns/:id", async (req, res) => {
   try {
-    const { message, scheduledAt, timezone } = req.body;
+    const { message, scheduledAt, timezone, hubId } = req.body; // ✅
 
     if (!message || message.trim() === "") {
       return res.status(400).json({
@@ -345,7 +351,7 @@ app.put("/campaigns/:id", async (req, res) => {
       });
     }
 
-    const campaign = await smsCampaignRepository.getCampaign(req.params.id);
+    const campaign = await smsCampaignRepository.getCampaign(req.params.id, hubId); // ✅
 
     if (!campaign) {
       return res.status(404).json({
@@ -365,13 +371,13 @@ app.put("/campaigns/:id", async (req, res) => {
       req.params.id,
       message,
       scheduledDate.toISOString(),
-      timezone || "UTC"
+      timezone || "UTC",
+      hubId // ✅
     );
 
     res.json(updated);
   } catch (error) {
     console.error(error);
-
     res.status(500).json({
       success: false,
       message: error.message,
@@ -383,7 +389,8 @@ app.put("/campaigns/:id", async (req, res) => {
 
 app.delete("/campaigns/:id", async (req, res) => {
   try {
-    const campaign = await smsCampaignRepository.getCampaign(req.params.id);
+    const hubId = Number(req.query.hubId); // ✅
+    const campaign = await smsCampaignRepository.getCampaign(req.params.id, hubId); // ✅
 
     if (!campaign) {
       return res.status(404).json({
@@ -400,7 +407,8 @@ app.delete("/campaigns/:id", async (req, res) => {
     }
 
     const deleted = await smsCampaignRepository.deleteScheduledCampaign(
-      req.params.id
+      req.params.id,
+      hubId // ✅
     );
 
     res.json({
@@ -409,7 +417,6 @@ app.delete("/campaigns/:id", async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-
     res.status(500).json({
       success: false,
       message: error.message,
@@ -418,7 +425,5 @@ app.delete("/campaigns/:id", async (req, res) => {
 });
 
 app.listen(env.PORT, () => {
-  console.log(
-    `OAuth service listening on port ${env.PORT}`
-  );
+  console.log(`OAuth service listening on port ${env.PORT}`);
 });
