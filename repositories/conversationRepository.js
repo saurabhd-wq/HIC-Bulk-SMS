@@ -78,7 +78,7 @@ function toRow(hsObject) {
     direction:            p.direction           ?? null,
     message:              p.message             ?? null,
     
-    created_at:           p.createdate          ?? null,
+    created_at: hsObject.createdAt ?? p.createdate ?? null,
   };
 }
 
