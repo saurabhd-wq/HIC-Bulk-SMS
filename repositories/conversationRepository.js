@@ -7,7 +7,7 @@
 // HubSpot Custom Object internal name assumed: "sms_conversation"
 // (adjust OBJECT_TYPE below if your portal uses a different internal name)
 
-const { refreshIfNeeded } = require("./installationRepository");
+const oauthService = require("../services/oauthService");
 
 const OBJECT_TYPE = "sms_conversation"; // HubSpot Custom Object internal name
 const HS_API_BASE = "https://api.hubapi.com";
@@ -17,33 +17,43 @@ const HS_API_BASE = "https://api.hubapi.com";
 // ─────────────────────────────────────────────────────────────
 
 async function getToken(hubId) {
-  const installation = await refreshIfNeeded(hubId);
-  return installation.access_token;
+  return await oauthService.getValidAccessToken(hubId);
 }
 
 async function hsRequest(method, path, hubId, body = null) {
-  const token = await getToken(hubId);
+  let token = await getToken(hubId);
 
-  const options = {
-    method,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  };
+  async function makeRequest(accessToken) {
+    const options = {
+      method,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    };
 
-  if (body !== null) {
-    options.body = JSON.stringify(body);
+    if (body !== null) {
+      options.body = JSON.stringify(body);
+    }
+
+    return await fetch(`${HS_API_BASE}${path}`, options);
   }
 
-  const res = await fetch(`${HS_API_BASE}${path}`, options);
+  let res = await makeRequest(token);
+
+  if (res.status === 401) {
+    token = await oauthService.refreshAccessToken(hubId);
+    res = await makeRequest(token);
+  }
 
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`HubSpot API error ${res.status}: ${text}`);
   }
 
-  if (res.status === 204) return null;
+  if (res.status === 204) {
+    return null;
+  }
 
   return res.json();
 }
