@@ -77,7 +77,7 @@ function toRow(hsObject) {
     twilio_message_sid:   p.twilio_message_sid  ?? null,
     direction:            p.direction           ?? null,
     message:              p.message             ?? null,
-    status:               p.status              ?? null,
+    
     created_at:           p.createdate          ?? null,
   };
 }
@@ -88,7 +88,7 @@ const ALL_PROPERTIES = [
   "twilio_message_sid",
   "direction",
   "message",
-  "status",
+  
   "createdate",
 ].join(",");
 
@@ -155,7 +155,7 @@ async function saveOutgoingMessage({
         contact_ids:        String(contactId),
         phone_number:       phoneNumber,
         twilio_message_sid: twilioMessageSid,
-        direction:          "outbound",
+        direction:          "OUTBOUND",
         message,
         status,
       },
