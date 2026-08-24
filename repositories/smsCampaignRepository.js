@@ -12,7 +12,7 @@
 
 const oauthService = require("../services/oauthService");
 
-const OBJECT_TYPE = "sms_campaign"; // HubSpot Custom Object internal name
+const OBJECT_TYPE = "p_sms_campaign"; // HubSpot Custom Object internal name
 const HS_API_BASE = "https://api.hubapi.com";
 
 // ─────────────────────────────────────────────────────────────
