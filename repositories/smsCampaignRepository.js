@@ -24,37 +24,47 @@ const HS_API_BASE = "https://api.hubapi.com";
  * Reuses your existing OAuth refresh logic — nothing changes there.
  */
 async function getToken(hubId) {
-  const installation = await oauthService.refreshAccessToken(hubId);
-  return installation.access_token;
+  return await oauthService.getValidAccessToken(hubId);
 }
 
 /**
  * Central fetch wrapper — adds auth header and throws on non-2xx.
  */
 async function hsRequest(method, path, hubId, body = null) {
-  const token = await getToken(hubId);
+  let token = await getToken(hubId);
 
-  const options = {
-    method,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  };
+  async function makeRequest(accessToken) {
+    const options = {
+      method,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    };
 
-  if (body !== null) {
-    options.body = JSON.stringify(body);
+    if (body !== null) {
+      options.body = JSON.stringify(body);
+    }
+
+    return await fetch(`${HS_API_BASE}${path}`, options);
   }
 
-  const res = await fetch(`${HS_API_BASE}${path}`, options);
+  let res = await makeRequest(token);
+
+  // Token rejected by HubSpot → refresh once and retry
+  if (res.status === 401) {
+    token = await oauthService.refreshAccessToken(hubId);
+    res = await makeRequest(token);
+  }
 
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`HubSpot API error ${res.status}: ${text}`);
   }
 
-  // 204 No Content → nothing to parse
-  if (res.status === 204) return null;
+  if (res.status === 204) {
+    return null;
+  }
 
   return res.json();
 }

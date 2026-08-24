@@ -40,6 +40,29 @@ async function refreshAccessToken(hubId) {
   return tokenData.access_token;
 }
 
+async function getValidAccessToken(hubId) {
+  const installation = await installationRepository.getInstallation(hubId);
+
+  if (!installation) {
+    throw new Error("HubSpot installation not found.");
+  }
+
+  const expiresAt = installation.expires_at
+    ? new Date(installation.expires_at).getTime()
+    : 0;
+
+  // Existing token is still valid for at least 60 seconds
+  if (
+    installation.access_token &&
+    expiresAt > Date.now() + 60 * 1000
+  ) {
+    return installation.access_token;
+  }
+
+  return await refreshAccessToken(hubId);
+}
+
 module.exports = {
   refreshAccessToken,
+  getValidAccessToken,
 };

@@ -43,7 +43,7 @@ async function getInstallation(hubId) {
     [hubId]
   );
 
-  console.log("Installation:", result.rows);
+  console.log("Installation found:", !!result.rows[0]);
 
   return result.rows[0] || null;
 }
