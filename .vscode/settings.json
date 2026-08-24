@@ -16,6 +16,25 @@
             "password": "DvWYJsL7DEpVmw7Dv3u8mGYSW4K0GRUu",
             "username": "hic_bulk_sms_user",
             "database": "hic_bulk_sms"
+        },
+        {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": true
+                }
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "dpg-da5utde417fc738p85eg-a.ohio-postgres.render.com",
+            "port": 5432,
+            "sshOptions": {
+                "port": 22
+            },
+            "driver": "PostgreSQL",
+            "name": "new DB",
+            "database": "hic_bulk_sms_db2",
+            "username": "hic_bulk_sms_db2_user",
+            "password": "EHV9aBN3ay11Ly10yzUq8GnWhiSZZ7kE"
         }
     ]
 }

@@ -10,7 +10,7 @@
 // Every write goes through the access token fetched per hub_id from
 // the existing PostgreSQL installationRepository — no OAuth logic changes.
 
-const { getInstallation, refreshIfNeeded } = require("./installationRepository");
+const oauthService = require("../services/oauthService");
 
 const OBJECT_TYPE = "sms_campaign"; // HubSpot Custom Object internal name
 const HS_API_BASE = "https://api.hubapi.com";
@@ -24,7 +24,7 @@ const HS_API_BASE = "https://api.hubapi.com";
  * Reuses your existing OAuth refresh logic — nothing changes there.
  */
 async function getToken(hubId) {
-  const installation = await refreshIfNeeded(hubId);
+  const installation = await oauthService.refreshAccessToken(hubId);
   return installation.access_token;
 }
 
