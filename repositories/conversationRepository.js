@@ -144,7 +144,7 @@ async function saveOutgoingMessage({
   twilioMessageSid,
   message,
   status,
-  hubId,           // added — needed for token resolution
+  hubId,
 }) {
   const data = await hsRequest(
     "POST",
@@ -152,12 +152,11 @@ async function saveOutgoingMessage({
     hubId,
     {
       properties: {
-        contact_ids:        String(contactId),
-        phone_number:       phoneNumber,
+        contact_ids: String(contactId),
+        phone_number: phoneNumber,
         twilio_message_sid: twilioMessageSid,
-        direction:          "OUTBOUND",
+        direction: "OUTBOUND",
         message,
-        status,
       },
     }
   );
