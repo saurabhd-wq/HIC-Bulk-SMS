@@ -7,10 +7,10 @@ const HUBSPOT_API = "https://api.hubapi.com";
 
 const OBJECT_DEFINITIONS = [
   {
-    name: "test_1",
+    name: "p_sms_campaign", // HubSpot Custom Object internal name
     labels: {
-      singular: "Test Object 1",
-      plural: "Test Objects 1",
+      singular: "SMS Campaign",
+      plural: "SMS Campaigns",
     },
     description: "Stores bulk SMS campaign information.",
     primaryDisplayProperty: "hub_id",
@@ -63,10 +63,10 @@ const OBJECT_DEFINITIONS = [
   },
 
   {
-    name: "test_2",
+    name: "p_sms_conversation",
     labels: {
-      singular: "Test Object 2",
-      plural: "Test Objects 2",
+      singular: "SMS Conversation",
+      plural: "SMS Conversations",
     },
     description: "Stores SMS conversation messages.",
     primaryDisplayProperty: "phone_number",
