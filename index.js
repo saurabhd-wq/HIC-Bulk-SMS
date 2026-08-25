@@ -12,6 +12,8 @@ const contactRepository = require("./repositories/contactRepository");
 const conversationSendRoute = require("./routes/conversationSendRoute");
 const twilioSetupRoute = require("./routes/twilioSetupRoute");
 
+const createObjectsRoute = require("./routes/createObjectsRoute");
+
 const smsSendService = require("./services/smsSendService");
 const schedulerService = require("./services/schedulerService");
 
@@ -30,7 +32,9 @@ const app = express();
 app.use(express.json());
 app.use("/api/conversations/send", conversationSendRoute);
 app.use("/api/twilio/setup", twilioSetupRoute);
+app.use("/api/create-objects", createObjectsRoute);
 app.use("/api/merge-fields", mergeFieldRoutes);
+
 
 app.get("/", (req, res) => {
   res.send("HubSpot OAuth Service is running.");
