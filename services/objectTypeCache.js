@@ -16,6 +16,10 @@ async function fetchAndBuildCache(hubId) {
 
   if (!res.ok) {
     const text = await res.text();
+    if (res.status === 400 && text.includes("Invalid object or event type id")) {
+      clearCache(hubId);
+      console.log(`[objectTypeCache] Invalid typeId detected, cache cleared for hub ${hubId}`);
+    }
     throw new Error(
       `[objectTypeCache] Schema fetch failed for hub ${hubId}: ${res.status} ${text}`
     );

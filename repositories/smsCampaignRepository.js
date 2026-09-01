@@ -67,7 +67,7 @@ async function createCampaign(hubId, contactIds) {
     properties: {
       hub_id: String(hubId),
       contact_ids: JSON.stringify(contactIds),
-      status: "DRAFT",
+      status: "PENDING",
     },
   });
   return toRow(data);
