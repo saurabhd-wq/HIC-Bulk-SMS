@@ -4,8 +4,9 @@ const oauthService = require("./oauthService");
 
 const HS_API_BASE = "https://api.hubapi.com";
 
-// Per-hub cache: { "246724823": { sms_campaign: "2-267666792", sms_conversation: "2-267666795" } }
 const cache = {};
+
+const OBJECT_NAMES = ["sms_campaign", "sms_conversation"];
 
 async function fetchAndBuildCache(hubId) {
   const token = await oauthService.getValidAccessToken(hubId);
@@ -16,29 +17,30 @@ async function fetchAndBuildCache(hubId) {
 
   if (!res.ok) {
     const text = await res.text();
-    if (res.status === 400 && text.includes("Invalid object or event type id")) {
-      clearCache(hubId);
-      console.log(`[objectTypeCache] Invalid typeId detected, cache cleared for hub ${hubId}`);
-    }
     throw new Error(
       `[objectTypeCache] Schema fetch failed for hub ${hubId}: ${res.status} ${text}`
     );
   }
 
   const { results = [] } = await res.json();
+
+  // DEBUG
+  console.log(`[objectTypeCache] hub ${hubId} — total schemas: ${results.length}`);
+  console.log(`[objectTypeCache] hub ${hubId} — all names:`, JSON.stringify(results.map(s => s.name)));
+
   const map = {};
 
   for (const schema of results) {
-    // HubSpot always stores name as "p_sms_campaign" — strip p_ for lookup key
     const raw = schema.name ?? "";
     const key = raw.startsWith("p_") ? raw.slice(2) : raw;
+    console.log(`[objectTypeCache] hub ${hubId} — checking: raw="${raw}" key="${key}" objectTypeId="${schema.objectTypeId}"`);
 
-    if (key === "sms_campaign" || key === "sms_conversation") {
-      map[key] = schema.objectTypeId; // e.g. "2-267666792"
+    if (OBJECT_NAMES.includes(key)) {
+      map[key] = schema.objectTypeId;
     }
   }
 
-  console.log(`[objectTypeCache] hub ${hubId} resolved:`, map);
+  console.log(`[objectTypeCache] hub ${hubId} — resolved map:`, JSON.stringify(map));
   return map;
 }
 
