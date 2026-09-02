@@ -52,13 +52,10 @@ async function getObjectTypeId(hubId, objectName) {
   const typeId = cache[key][objectName];
 
   if (!typeId) {
-    // throw new Error(
-    //   `[objectTypeCache] "${objectName}" not found in hub ${key}. ` +
-    //   `Found: ${JSON.stringify(cache[key])}. ` +
-    //   `Run the Setup to create Custom Objects first.`
-    // );
     throw new Error(
-    `Custom Objects not found. Please click the "Create Objects" button to set up SMS Campaign and SMS Conversation objects first.`
+      `[objectTypeCache] "${objectName}" not found in hub ${key}. ` +
+      `Found: ${JSON.stringify(cache[key])}. ` +
+      `Run the Setup to create Custom Objects first.`
     );
   }
 
